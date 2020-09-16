@@ -212,6 +212,7 @@ if(WIN32)
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
@@ -225,6 +226,7 @@ elseif(NOT APPLE)
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING FALSE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
@@ -238,6 +240,7 @@ else()
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING FALSE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
@@ -253,6 +256,7 @@ set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT ${ENABLE_FILTER_DISPLACEMENT} CA
 set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK ${ENABLE_FILTER_DYNAMIC_MASK} CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING ${ENABLE_FILTER_NVIDIA_FACE_TRACKING} CACHE BOOL "Enable NVidia Face Tracking Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS ${ENABLE_FILTER_SDF_EFFECTS} CACHE BOOL "Enable SDF Effects Filter")
+set(${PropertyPrefix}ENABLE_FILTER_TAA ${ENABLE_FILTER_TAA} CACHE BOOL "Enable Temporal Anti-Aliasing Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SHADER ${ENABLE_FILTER_SHADER} CACHE BOOL "Enable Shader Filter")
 set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM ${ENABLE_FILTER_TRANSFORM} CACHE BOOL "Enable Transform Filter")
 ## Sources
@@ -562,15 +566,17 @@ list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
 if(WIN32)
-	list(APPEND PROJECT_TEMPLATES
-		"templates/installer.iss.in"
-		"templates/version.rc.in"
-	)
+	if(NOT TARGET libobs)
+		list(APPEND PROJECT_TEMPLATES
+			"templates/installer.iss.in"
+			"templates/version.rc.in"
+		)
+		list(APPEND PROJECT_PRIVATE_GENERATED
+			"${PROJECT_BINARY_DIR}/generated/version.rc"
+		)
+	endif()
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/windll.cpp"
-	)
-	list(APPEND PROJECT_PRIVATE_GENERATED
-		"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
 endif()
 if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -811,6 +817,21 @@ if(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_SDF_EFFECTS
+	)
+endif()
+
+## Features - Temporal Anti-Aliasing Filter
+if(${PropertyPrefix}ENABLE_FILTER_TAA)
+	list(APPEND PROJECT_DATA
+		"data/effects/taa/taa-producer.effect"
+		"data/effects/taa/taa-consumer.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-taa.hpp"
+		"source/filters/filter-taa.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_TAA
 	)
 endif()
 

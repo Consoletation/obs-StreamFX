@@ -26,10 +26,10 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
 
-namespace streamfx::filter::sdf_effects {
-	class sdf_effects_instance : public obs::source_instance {
-		gs::effect _sdf_producer_effect;
-		gs::effect _sdf_consumer_effect;
+namespace streamfx::filter::taa {
+	class taa_instance : public obs::source_instance {
+		gs::effect _taa_producer_effect;
+		gs::effect _taa_consumer_effect;
 
 		// Input
 		std::shared_ptr<gs::rendertarget> _source_rt;
@@ -37,11 +37,11 @@ namespace streamfx::filter::sdf_effects {
 		bool                              _source_rendered;
 
 		// Distance Field
-		std::shared_ptr<gs::rendertarget> _sdf_write;
-		std::shared_ptr<gs::rendertarget> _sdf_read;
-		std::shared_ptr<gs::texture>      _sdf_texture;
-		double_t                          _sdf_scale;
-		float_t                           _sdf_threshold;
+		std::shared_ptr<gs::rendertarget> _taa_write;
+		std::shared_ptr<gs::rendertarget> _taa_read;
+		std::shared_ptr<gs::texture>      _taa_texture;
+		double_t                          _taa_scale;
+		float_t                           _taa_threshold;
 
 		// Effects
 		bool                              _output_rendered;
@@ -95,8 +95,8 @@ namespace streamfx::filter::sdf_effects {
 		float_t _outline_sharpness_inv;
 
 		public:
-		sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
-		virtual ~sdf_effects_instance();
+		taa_instance(obs_data_t* settings, obs_source_t* self);
+		virtual ~taa_instance();
 
 		virtual void load(obs_data_t* settings) override;
 		virtual void migrate(obs_data_t* data, uint64_t version) override;
@@ -106,24 +106,23 @@ namespace streamfx::filter::sdf_effects {
 		virtual void video_render(gs_effect_t*) override;
 	};
 
-	class sdf_effects_factory : public obs::source_factory<filter::sdf_effects::sdf_effects_factory,
-														   filter::sdf_effects::sdf_effects_instance> {
+	class taa_factory : public obs::source_factory<filter::taa::taa_factory, filter::taa::taa_instance> {
 		public:
-		sdf_effects_factory();
-		virtual ~sdf_effects_factory();
+		taa_factory();
+		virtual ~taa_factory();
 
 		virtual const char* get_name() override;
 
 		virtual void get_defaults2(obs_data_t* data) override;
 
-		virtual obs_properties_t* get_properties2(filter::sdf_effects::sdf_effects_instance* data) override;
+		virtual obs_properties_t* get_properties2(filter::taa::taa_instance* data) override;
 
 		public: // Singleton
 		static void initialize();
 
 		static void finalize();
 
-		static std::shared_ptr<sdf_effects_factory> get();
+		static std::shared_ptr<taa_factory> get();
 	};
 
-} // namespace streamfx::filter::sdf_effects
+} // namespace streamfx::filter::taa

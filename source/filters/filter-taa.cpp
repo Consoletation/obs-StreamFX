@@ -17,66 +17,66 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "filter-sdf-effects.hpp"
+#include "filter-taa.hpp"
 #include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-#define LOG_PREFIX "<filter-sdf-effects> "
+#define LOG_PREFIX "<filter-taa> "
 
 // Translation Strings
-#define ST "Filter.SDFEffects"
+#define ST "Filter.TAA"
 
-#define ST_TAA "Filter.SDFEffects.TAA"
-#define ST_TAA_RANGE_MINIMUM "Filter.SDFEffects.TAA.Range.Minimum"
-#define ST_TAA_RANGE_MAXIMUM "Filter.SDFEffects.TAA.Range.Maximum"
-#define ST_TAA_OFFSET_X "Filter.SDFEffects.TAA.Offset.X"
-#define ST_TAA_OFFSET_Y "Filter.SDFEffects.TAA.Offset.Y"
-#define ST_TAA_COLOR "Filter.SDFEffects.TAA.Color"
-#define ST_TAA_ALPHA "Filter.SDFEffects.TAA.Alpha"
+#define ST_TAA "Filter.TAA.TAA"
+#define ST_TAA_RANGE_MINIMUM "Filter.TAA.TAA.Range.Minimum"
+#define ST_TAA_RANGE_MAXIMUM "Filter.TAA.TAA.Range.Maximum"
+#define ST_TAA_OFFSET_X "Filter.TAA.TAA.Offset.X"
+#define ST_TAA_OFFSET_Y "Filter.TAA.TAA.Offset.Y"
+#define ST_TAA_COLOR "Filter.TAA.TAA.Color"
+#define ST_TAA_ALPHA "Filter.TAA.TAA.Alpha"
 
-#define ST_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
-#define ST_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
-#define ST_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
-#define ST_SHADOW_INNER_OFFSET_X "Filter.SDFEffects.Shadow.Inner.Offset.X"
-#define ST_SHADOW_INNER_OFFSET_Y "Filter.SDFEffects.Shadow.Inner.Offset.Y"
-#define ST_SHADOW_INNER_COLOR "Filter.SDFEffects.Shadow.Inner.Color"
-#define ST_SHADOW_INNER_ALPHA "Filter.SDFEffects.Shadow.Inner.Alpha"
+#define ST_SHADOW_INNER "Filter.TAA.Shadow.Inner"
+#define ST_SHADOW_INNER_RANGE_MINIMUM "Filter.TAA.Shadow.Inner.Range.Minimum"
+#define ST_SHADOW_INNER_RANGE_MAXIMUM "Filter.TAA.Shadow.Inner.Range.Maximum"
+#define ST_SHADOW_INNER_OFFSET_X "Filter.TAA.Shadow.Inner.Offset.X"
+#define ST_SHADOW_INNER_OFFSET_Y "Filter.TAA.Shadow.Inner.Offset.Y"
+#define ST_SHADOW_INNER_COLOR "Filter.TAA.Shadow.Inner.Color"
+#define ST_SHADOW_INNER_ALPHA "Filter.TAA.Shadow.Inner.Alpha"
 
-#define ST_SHADOW_OUTER "Filter.SDFEffects.Shadow.Outer"
-#define ST_SHADOW_OUTER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Outer.Range.Minimum"
-#define ST_SHADOW_OUTER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Outer.Range.Maximum"
-#define ST_SHADOW_OUTER_OFFSET_X "Filter.SDFEffects.Shadow.Outer.Offset.X"
-#define ST_SHADOW_OUTER_OFFSET_Y "Filter.SDFEffects.Shadow.Outer.Offset.Y"
-#define ST_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
-#define ST_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
+#define ST_SHADOW_OUTER "Filter.TAA.Shadow.Outer"
+#define ST_SHADOW_OUTER_RANGE_MINIMUM "Filter.TAA.Shadow.Outer.Range.Minimum"
+#define ST_SHADOW_OUTER_RANGE_MAXIMUM "Filter.TAA.Shadow.Outer.Range.Maximum"
+#define ST_SHADOW_OUTER_OFFSET_X "Filter.TAA.Shadow.Outer.Offset.X"
+#define ST_SHADOW_OUTER_OFFSET_Y "Filter.TAA.Shadow.Outer.Offset.Y"
+#define ST_SHADOW_OUTER_COLOR "Filter.TAA.Shadow.Outer.Color"
+#define ST_SHADOW_OUTER_ALPHA "Filter.TAA.Shadow.Outer.Alpha"
 
-#define ST_GLOW_INNER "Filter.SDFEffects.Glow.Inner"
-#define ST_GLOW_INNER_COLOR "Filter.SDFEffects.Glow.Inner.Color"
-#define ST_GLOW_INNER_ALPHA "Filter.SDFEffects.Glow.Inner.Alpha"
-#define ST_GLOW_INNER_WIDTH "Filter.SDFEffects.Glow.Inner.Width"
-#define ST_GLOW_INNER_SHARPNESS "Filter.SDFEffects.Glow.Inner.Sharpness"
+#define ST_GLOW_INNER "Filter.TAA.Glow.Inner"
+#define ST_GLOW_INNER_COLOR "Filter.TAA.Glow.Inner.Color"
+#define ST_GLOW_INNER_ALPHA "Filter.TAA.Glow.Inner.Alpha"
+#define ST_GLOW_INNER_WIDTH "Filter.TAA.Glow.Inner.Width"
+#define ST_GLOW_INNER_SHARPNESS "Filter.TAA.Glow.Inner.Sharpness"
 
-#define ST_GLOW_OUTER "Filter.SDFEffects.Glow.Outer"
-#define ST_GLOW_OUTER_COLOR "Filter.SDFEffects.Glow.Outer.Color"
-#define ST_GLOW_OUTER_ALPHA "Filter.SDFEffects.Glow.Outer.Alpha"
-#define ST_GLOW_OUTER_WIDTH "Filter.SDFEffects.Glow.Outer.Width"
-#define ST_GLOW_OUTER_SHARPNESS "Filter.SDFEffects.Glow.Outer.Sharpness"
+#define ST_GLOW_OUTER "Filter.TAA.Glow.Outer"
+#define ST_GLOW_OUTER_COLOR "Filter.TAA.Glow.Outer.Color"
+#define ST_GLOW_OUTER_ALPHA "Filter.TAA.Glow.Outer.Alpha"
+#define ST_GLOW_OUTER_WIDTH "Filter.TAA.Glow.Outer.Width"
+#define ST_GLOW_OUTER_SHARPNESS "Filter.TAA.Glow.Outer.Sharpness"
 
-#define ST_OUTLINE "Filter.SDFEffects.Outline"
-#define ST_OUTLINE_COLOR "Filter.SDFEffects.Outline.Color"
-#define ST_OUTLINE_ALPHA "Filter.SDFEffects.Outline.Alpha"
-#define ST_OUTLINE_WIDTH "Filter.SDFEffects.Outline.Width"
-#define ST_OUTLINE_OFFSET "Filter.SDFEffects.Outline.Offset"
-#define ST_OUTLINE_SHARPNESS "Filter.SDFEffects.Outline.Sharpness"
+#define ST_OUTLINE "Filter.TAA.Outline"
+#define ST_OUTLINE_COLOR "Filter.TAA.Outline.Color"
+#define ST_OUTLINE_ALPHA "Filter.TAA.Outline.Alpha"
+#define ST_OUTLINE_WIDTH "Filter.TAA.Outline.Width"
+#define ST_OUTLINE_OFFSET "Filter.TAA.Outline.Offset"
+#define ST_OUTLINE_SHARPNESS "Filter.TAA.Outline.Sharpness"
 
-#define ST_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
-#define ST_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
+#define ST_SDF_SCALE "Filter.TAA.SDF.Scale"
+#define ST_SDF_THRESHOLD "Filter.TAA.SDF.Threshold"
 
-using namespace streamfx::filter::sdf_effects;
+using namespace streamfx::filter::taa;
 
-sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(),
+taa_instance::taa_instance(obs_data_t* settings, obs_source_t* self)
+	: obs::source_instance(settings, self), _source_rendered(false), _taa_scale(1.0), _taa_threshold(),
 	  _output_rendered(false), _time(0), _time_loop(0), _loops(0), _taa(false), _taa_color(), _taa_range_min(),
 	  _taa_range_max(), _taa_offset_x(), _taa_offset_y(), _inner_shadow(false), _inner_shadow_color(),
 	  _inner_shadow_range_min(), _inner_shadow_range_max(), _inner_shadow_offset_x(), _inner_shadow_offset_y(),
@@ -91,19 +91,19 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 		vec4 transparent = {0, 0, 0, 0};
 
 		_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
-		_sdf_read  = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_taa_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_taa_read  = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
 		_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
-		std::shared_ptr<gs::rendertarget> initialize_rts[] = {_source_rt, _sdf_write, _sdf_read, _output_rt};
+		std::shared_ptr<gs::rendertarget> initialize_rts[] = {_source_rt, _taa_write, _taa_read, _output_rt};
 		for (auto rt : initialize_rts) {
 			auto op = rt->render(1, 1);
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &transparent, 0, 0);
 		}
 
 		std::pair<const char*, gs::effect&> load_arr[] = {
-			{"effects/sdf/sdf-producer.effect", _sdf_producer_effect},
-			{"effects/sdf/sdf-consumer.effect", _sdf_consumer_effect},
+			{"effects/taa/taa-producer.effect", _taa_producer_effect},
+			{"effects/taa/taa-consumer.effect", _taa_consumer_effect},
 		};
 		for (auto& kv : load_arr) {
 			char* path = obs_module_file(kv.first);
@@ -124,16 +124,16 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 	update(settings);
 }
 
-sdf_effects_instance::~sdf_effects_instance() {}
+taa_instance::~taa_instance() {}
 
-void sdf_effects_instance::load(obs_data_t* settings)
+void taa_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void sdf_effects_instance::migrate(obs_data_t* data, uint64_t version) {}
+void taa_instance::migrate(obs_data_t* data, uint64_t version) {}
 
-void sdf_effects_instance::update(obs_data_t* data)
+void taa_instance::update(obs_data_t* data)
 {
 	{
 		_taa = obs_data_get_bool(data, ST_TAA)
@@ -288,11 +288,11 @@ void sdf_effects_instance::update(obs_data_t* data)
 		}
 	}
 
-	_sdf_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
-	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
+	_taa_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
+	_taa_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
 }
 
-void sdf_effects_instance::video_tick(float_t time)
+void taa_instance::video_tick(float_t time)
 {
 	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
 		_source_rendered = false;
@@ -312,7 +312,7 @@ void sdf_effects_instance::video_tick(float_t time)
 	}
 }
 
-void sdf_effects_instance::video_render(gs_effect_t* effect)
+void taa_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
@@ -373,24 +373,24 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 			// Generate SDF Buffers
 			{
-				_sdf_read->get_texture(_sdf_texture);
-				if (!_sdf_texture) {
+				_taa_read->get_texture(_taa_texture);
+				if (!_taa_texture) {
 					throw std::runtime_error("SDF Backbuffer empty");
 				}
 
-				if (!_sdf_producer_effect) {
+				if (!_taa_producer_effect) {
 					throw std::runtime_error("SDF Effect no loaded");
 				}
 
 				// Scale SDF Size
-				double_t sdfW, sdfH;
-				sdfW = baseW * _sdf_scale;
-				sdfH = baseH * _sdf_scale;
-				if (sdfW <= 1) {
-					sdfW = 1.0;
+				double_t taaW, taaH;
+				taaW = baseW * _taa_scale;
+				taaH = baseH * _taa_scale;
+				if (taaW <= 1) {
+					taaW = 1.0;
 				}
-				if (sdfH <= 1) {
-					sdfH = 1.0;
+				if (taaH <= 1) {
+					taaH = 1.0;
 				}
 
 				{
@@ -398,22 +398,22 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 					gs::debug_marker gdm{gs::debug_color_convert, "Update Distance Field"};
 #endif
 
-					auto op = _sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
+					auto op = _taa_write->render(uint32_t(taaW), uint32_t(taaH));
 					gs_ortho(0, 1, 0, 1, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
-					_sdf_producer_effect.get_parameter("_image").set_texture(_source_texture);
-					_sdf_producer_effect.get_parameter("_size").set_float2(float_t(sdfW), float_t(sdfH));
-					_sdf_producer_effect.get_parameter("_sdf").set_texture(_sdf_texture);
-					_sdf_producer_effect.get_parameter("_threshold").set_float(_sdf_threshold);
+					_taa_producer_effect.get_parameter("_image").set_texture(_source_texture);
+					_taa_producer_effect.get_parameter("_size").set_float2(float_t(taaW), float_t(taaH));
+					_taa_producer_effect.get_parameter("_taa").set_texture(_taa_texture);
+					_taa_producer_effect.get_parameter("_threshold").set_float(_taa_threshold);
 
-					while (gs_effect_loop(_sdf_producer_effect.get_object(), "Draw")) {
+					while (gs_effect_loop(_taa_producer_effect.get_object(), "Draw")) {
 						streamfx::gs_draw_fullscreen_tri();
 					}
 				}
-				std::swap(_sdf_read, _sdf_write);
-				_sdf_read->get_texture(_sdf_texture);
-				if (!_sdf_texture) {
+				std::swap(_taa_read, _taa_write);
+				_taa_read->get_texture(_taa_texture);
+				if (!_taa_texture) {
 					throw std::runtime_error("SDF Backbuffer empty");
 				}
 			}
@@ -431,7 +431,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 	if (!_output_rendered) {
 		_output_texture = _source_texture;
 
-		if (!_sdf_consumer_effect) {
+		if (!_taa_consumer_effect) {
 			obs_source_skip_video_filter(_self);
 			return;
 		}
@@ -473,78 +473,78 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 			gs_enable_blending(true);
 			gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
 			if (_taa) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pTAAColor").set_float4(_taa_color);
-				_sdf_consumer_effect.get_parameter("pTAAMin").set_float(_taa_range_min);
-				_sdf_consumer_effect.get_parameter("pTAAMax").set_float(_taa_range_max);
-				_sdf_consumer_effect.get_parameter("pTAAOffset")
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pTAAColor").set_float4(_taa_color);
+				_taa_consumer_effect.get_parameter("pTAAMin").set_float(_taa_range_min);
+				_taa_consumer_effect.get_parameter("pTAAMax").set_float(_taa_range_max);
+				_taa_consumer_effect.get_parameter("pTAAOffset")
 					.set_float2(_taa_offset_x / float_t(baseW), _taa_offset_y / float_t(baseH));
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "TAA")) {
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "TAA")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_outer_shadow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_outer_shadow_color);
-				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_outer_shadow_range_min);
-				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_outer_shadow_range_max);
-				_sdf_consumer_effect.get_parameter("pShadowOffset")
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pShadowColor").set_float4(_outer_shadow_color);
+				_taa_consumer_effect.get_parameter("pShadowMin").set_float(_outer_shadow_range_min);
+				_taa_consumer_effect.get_parameter("pShadowMax").set_float(_outer_shadow_range_max);
+				_taa_consumer_effect.get_parameter("pShadowOffset")
 					.set_float2(_outer_shadow_offset_x / float_t(baseW), _outer_shadow_offset_y / float_t(baseH));
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowOuter")) {
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "ShadowOuter")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_inner_shadow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_inner_shadow_color);
-				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_inner_shadow_range_min);
-				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_inner_shadow_range_max);
-				_sdf_consumer_effect.get_parameter("pShadowOffset")
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pShadowColor").set_float4(_inner_shadow_color);
+				_taa_consumer_effect.get_parameter("pShadowMin").set_float(_inner_shadow_range_min);
+				_taa_consumer_effect.get_parameter("pShadowMax").set_float(_inner_shadow_range_max);
+				_taa_consumer_effect.get_parameter("pShadowOffset")
 					.set_float2(_inner_shadow_offset_x / float_t(baseW), _inner_shadow_offset_y / float_t(baseH));
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowInner")) {
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "ShadowInner")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_outer_glow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(_outer_glow_color);
-				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(_outer_glow_width);
-				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_outer_glow_sharpness);
-				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_outer_glow_sharpness_inv);
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowOuter")) {
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pGlowColor").set_float4(_outer_glow_color);
+				_taa_consumer_effect.get_parameter("pGlowWidth").set_float(_outer_glow_width);
+				_taa_consumer_effect.get_parameter("pGlowSharpness").set_float(_outer_glow_sharpness);
+				_taa_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_outer_glow_sharpness_inv);
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "GlowOuter")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_inner_glow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(_inner_glow_color);
-				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(_inner_glow_width);
-				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_inner_glow_sharpness);
-				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_inner_glow_sharpness_inv);
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowInner")) {
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pGlowColor").set_float4(_inner_glow_color);
+				_taa_consumer_effect.get_parameter("pGlowWidth").set_float(_inner_glow_width);
+				_taa_consumer_effect.get_parameter("pGlowSharpness").set_float(_inner_glow_sharpness);
+				_taa_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_inner_glow_sharpness_inv);
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "GlowInner")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_outline) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pOutlineColor").set_float4(_outline_color);
-				_sdf_consumer_effect.get_parameter("pOutlineWidth").set_float(_outline_width);
-				_sdf_consumer_effect.get_parameter("pOutlineOffset").set_float(_outline_offset);
-				_sdf_consumer_effect.get_parameter("pOutlineSharpness").set_float(_outline_sharpness);
-				_sdf_consumer_effect.get_parameter("pOutlineSharpnessInverse").set_float(_outline_sharpness_inv);
-				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "Outline")) {
+				_taa_consumer_effect.get_parameter("pSDFTexture").set_texture(_taa_texture);
+				_taa_consumer_effect.get_parameter("pSDFThreshold").set_float(_taa_threshold);
+				_taa_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_taa_consumer_effect.get_parameter("pOutlineColor").set_float4(_outline_color);
+				_taa_consumer_effect.get_parameter("pOutlineWidth").set_float(_outline_width);
+				_taa_consumer_effect.get_parameter("pOutlineOffset").set_float(_outline_offset);
+				_taa_consumer_effect.get_parameter("pOutlineSharpness").set_float(_outline_sharpness);
+				_taa_consumer_effect.get_parameter("pOutlineSharpnessInverse").set_float(_outline_sharpness_inv);
+				while (gs_effect_loop(_taa_consumer_effect.get_object(), "Outline")) {
 					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
@@ -577,25 +577,25 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-sdf_effects_factory::sdf_effects_factory()
+taa_factory::taa_factory()
 {
-	_info.id           = PREFIX "filter-sdf-effects";
+	_info.id           = PREFIX "filter-taa";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
-	register_proxy("obs-stream-effects-filter-sdf-effects");
+	register_proxy("obs-stream-effects-filter-taa");
 }
 
-sdf_effects_factory::~sdf_effects_factory() {}
+taa_factory::~taa_factory() {}
 
-const char* sdf_effects_factory::get_name()
+const char* taa_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void sdf_effects_factory::get_defaults2(obs_data_t* data)
+void taa_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_bool(data, ST_TAA, false);
 	obs_data_set_default_int(data, ST_TAA_COLOR, 0x00000000);
@@ -762,7 +762,7 @@ try {
 	return true;
 }
 
-obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* data)
+obs_properties_t* taa_factory::get_properties2(taa_instance* data)
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;
@@ -909,20 +909,20 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 	return props;
 }
 
-std::shared_ptr<sdf_effects_factory> _filter_sdf_effects_factory_instance = nullptr;
+std::shared_ptr<taa_factory> _filter_taa_factory_instance = nullptr;
 
-void streamfx::filter::sdf_effects::sdf_effects_factory::initialize()
+void streamfx::filter::taa::taa_factory::initialize()
 {
-	if (!_filter_sdf_effects_factory_instance)
-		_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
+	if (!_filter_taa_factory_instance)
+		_filter_taa_factory_instance = std::make_shared<taa_factory>();
 }
 
-void streamfx::filter::sdf_effects::sdf_effects_factory::finalize()
+void streamfx::filter::taa::taa_factory::finalize()
 {
-	_filter_sdf_effects_factory_instance.reset();
+	_filter_taa_factory_instance.reset();
 }
 
-std::shared_ptr<sdf_effects_factory> streamfx::filter::sdf_effects::sdf_effects_factory::get()
+std::shared_ptr<taa_factory> streamfx::filter::taa::taa_factory::get()
 {
-	return _filter_sdf_effects_factory_instance;
+	return _filter_taa_factory_instance;
 }

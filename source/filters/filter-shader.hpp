@@ -27,6 +27,8 @@ namespace streamfx::filter::shader {
 	class shader_instance : public obs::source_instance {
 		std::shared_ptr<gfx::shader::shader> _fx;
 		std::shared_ptr<gs::rendertarget>    _rt;
+		std::shared_ptr<gs::rendertarget>    _rt2;
+		int16_t                              _swap_once;
 
 		public:
 		shader_instance(obs_data_t* data, obs_source_t* self);
