@@ -27,6 +27,14 @@
 // Translation Strings
 #define ST "Filter.SDFEffects"
 
+#define ST_TAA "Filter.SDFEffects.TAA"
+#define ST_TAA_RANGE_MINIMUM "Filter.SDFEffects.TAA.Range.Minimum"
+#define ST_TAA_RANGE_MAXIMUM "Filter.SDFEffects.TAA.Range.Maximum"
+#define ST_TAA_OFFSET_X "Filter.SDFEffects.TAA.Offset.X"
+#define ST_TAA_OFFSET_Y "Filter.SDFEffects.TAA.Offset.Y"
+#define ST_TAA_COLOR "Filter.SDFEffects.TAA.Color"
+#define ST_TAA_ALPHA "Filter.SDFEffects.TAA.Alpha"
+
 #define ST_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
 #define ST_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
 #define ST_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
@@ -69,7 +77,8 @@ using namespace streamfx::filter::sdf_effects;
 
 sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(),
-	  _output_rendered(false), _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(),
+	  _output_rendered(false), _taa(false), _taa_color(), _taa_range_min(), _taa_range_max(), _taa_offset_x(),
+	  _taa_offset_y(), _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(),
 	  _inner_shadow_range_max(), _inner_shadow_offset_x(), _inner_shadow_offset_y(), _outer_shadow(false),
 	  _outer_shadow_color(), _outer_shadow_range_min(), _outer_shadow_range_max(), _outer_shadow_offset_x(),
 	  _outer_shadow_offset_y(), _inner_glow(false), _inner_glow_color(), _inner_glow_width(), _inner_glow_sharpness(),
@@ -126,6 +135,30 @@ void sdf_effects_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void sdf_effects_instance::update(obs_data_t* data)
 {
+	{
+		_taa = obs_data_get_bool(data, ST_TAA)
+			   && (obs_data_get_double(data, ST_TAA_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
+			union {
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
+			};
+			color        = uint32_t(obs_data_get_int(data, ST_TAA_COLOR));
+			_taa_color.x = float_t(c.r / 255.0);
+			_taa_color.y = float_t(c.g / 255.0);
+			_taa_color.z = float_t(c.b / 255.0);
+			_taa_color.w = float_t(obs_data_get_double(data, ST_TAA_ALPHA) / 100.0);
+		}
+		_taa_range_min = float_t(obs_data_get_double(data, ST_TAA_RANGE_MINIMUM));
+		_taa_range_max = float_t(obs_data_get_double(data, ST_TAA_RANGE_MAXIMUM));
+		_taa_offset_x  = float_t(obs_data_get_double(data, ST_TAA_OFFSET_X));
+		_taa_offset_y  = float_t(obs_data_get_double(data, ST_TAA_OFFSET_Y));
+	}
+
 	{
 		_outer_shadow =
 			obs_data_get_bool(data, ST_SHADOW_OUTER)
@@ -399,6 +432,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 		// SDF Effects Stack:
 		//   Normal Source
+		//   Temporal Anti-Aliasing
 		//   Outer Shadow
 		//   Inner Shadow
 		//   Outer Glow
@@ -426,6 +460,19 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 			gs_enable_blending(true);
 			gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
+			if (_taa) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pTAAColor").set_float4(_taa_color);
+				_sdf_consumer_effect.get_parameter("pTAAMin").set_float(_taa_range_min);
+				_sdf_consumer_effect.get_parameter("pTAAMax").set_float(_taa_range_max);
+				_sdf_consumer_effect.get_parameter("pTAAOffset")
+					.set_float2(_taa_offset_x / float_t(baseW), _taa_offset_y / float_t(baseH));
+				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "TAA")) {
+					streamfx::gs_draw_fullscreen_tri();
+				}
+			}
 			if (_outer_shadow) {
 				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
 				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
@@ -538,6 +585,14 @@ const char* sdf_effects_factory::get_name()
 
 void sdf_effects_factory::get_defaults2(obs_data_t* data)
 {
+	obs_data_set_default_bool(data, ST_TAA, false);
+	obs_data_set_default_int(data, ST_TAA_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_TAA_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_TAA_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, ST_TAA_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, ST_TAA_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_TAA_OFFSET_Y, 0.0);
+
 	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
 	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
 	obs_data_set_default_double(data, ST_SHADOW_OUTER_ALPHA, 100.0);
@@ -576,6 +631,24 @@ void sdf_effects_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
 	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
+}
+
+bool cb_modified_taa(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_TAA);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_RANGE_MINIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_RANGE_MAXIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_OFFSET_X), v);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_OFFSET_Y), v);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_TAA_ALPHA), v);
+	return true;
+} catch (const std::exception& ex) {
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
+} catch (...) {
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_shadow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -681,6 +754,26 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;
+
+	{
+		p = obs_properties_add_bool(props, ST_TAA, D_TRANSLATE(ST_TAA));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA)));
+		obs_property_set_modified_callback2(p, cb_modified_taa, data);
+		p = obs_properties_add_float_slider(props, ST_TAA_RANGE_MINIMUM, D_TRANSLATE(ST_TAA_RANGE_MINIMUM), -16.0, 16.0,
+											0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_RANGE_MINIMUM)));
+		p = obs_properties_add_float_slider(props, ST_TAA_RANGE_MAXIMUM, D_TRANSLATE(ST_TAA_RANGE_MAXIMUM), -16.0, 16.0,
+											0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_RANGE_MAXIMUM)));
+		p = obs_properties_add_float_slider(props, ST_TAA_OFFSET_X, D_TRANSLATE(ST_TAA_OFFSET_X), -100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_OFFSET_X)));
+		p = obs_properties_add_float_slider(props, ST_TAA_OFFSET_Y, D_TRANSLATE(ST_TAA_OFFSET_Y), -100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_OFFSET_Y)));
+		p = obs_properties_add_color(props, ST_TAA_COLOR, D_TRANSLATE(ST_TAA_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_TAA_ALPHA, D_TRANSLATE(ST_TAA_ALPHA), 0.0, 100.0, 0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TAA_ALPHA)));
+	}
 
 	{
 		p = obs_properties_add_bool(props, ST_SHADOW_OUTER, D_TRANSLATE(ST_SHADOW_OUTER));

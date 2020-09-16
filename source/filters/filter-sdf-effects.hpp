@@ -47,6 +47,13 @@ namespace streamfx::filter::sdf_effects {
 		bool                              _output_rendered;
 		std::shared_ptr<gs::texture>      _output_texture;
 		std::shared_ptr<gs::rendertarget> _output_rt;
+		/// Temporal Anti-Aliasing
+		bool    _taa;
+		vec4    _taa_color;
+		float_t _taa_range_min;
+		float_t _taa_range_max;
+		float_t _taa_offset_x;
+		float_t _taa_offset_y;
 		/// Inner Shadow
 		bool    _inner_shadow;
 		vec4    _inner_shadow_color;

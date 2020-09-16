@@ -81,6 +81,37 @@ VertDataOut VSDefault(VertDataIn v_in)
 // -------------------------------------------------------------------------------- //
 
 // -------------------------------------------------------------------------------- //
+// Temporal Anti-Aliasing
+uniform float4 pTAAColor;
+uniform float pTAAMin;
+uniform float pTAAMax;
+uniform float2 pTAAOffset;
+
+float4 PSTAA(VertDataOut v_in) : TARGET
+{
+	float2 dist_ex = pSDFTexture.Sample(sdfSampler, v_in.uv + pTAAOffset).rg * MAX_DISTANCE;
+	float dist = dist_ex.r - dist_ex.g;
+	bool mask = (pImageTexture.Sample(imageSampler, v_in.uv).a <= pSDFThreshold);
+
+	if (!mask) {
+		return float4(0.0, 0.0, 0.0, 0.0);
+	}
+
+	float v = clamp((dist - pTAAMin) / (pTAAMax - pTAAMin), 0., 1.);
+	return float4(pTAAColor.r, pTAAColor.g, pTAAColor.b, (1.0 - v) * pTAAColor.a);
+}
+
+technique TAAOuter
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSTAA(v_in);
+	}
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
 // Shadow Effects (Inner, Outer)
 uniform float4 pShadowColor;
 uniform float pShadowMin;
@@ -284,4 +315,3 @@ technique Outline
 	}
 }
 // -------------------------------------------------------------------------------- //
-
