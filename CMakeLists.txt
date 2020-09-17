@@ -212,8 +212,8 @@ if(WIN32)
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
-	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
 	set(ENABLE_SOURCE_SHADER TRUE)
@@ -226,8 +226,8 @@ elseif(NOT APPLE)
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING FALSE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
-	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
 	set(ENABLE_SOURCE_SHADER TRUE)
@@ -240,8 +240,8 @@ else()
 	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
 	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING FALSE)
 	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
-	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_SHADER TRUE)
+	set(ENABLE_FILTER_TAA TRUE)
 	set(ENABLE_FILTER_TRANSFORM TRUE)
 	set(ENABLE_SOURCE_MIRROR TRUE)
 	set(ENABLE_SOURCE_SHADER TRUE)
@@ -256,8 +256,8 @@ set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT ${ENABLE_FILTER_DISPLACEMENT} CA
 set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK ${ENABLE_FILTER_DYNAMIC_MASK} CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING ${ENABLE_FILTER_NVIDIA_FACE_TRACKING} CACHE BOOL "Enable NVidia Face Tracking Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS ${ENABLE_FILTER_SDF_EFFECTS} CACHE BOOL "Enable SDF Effects Filter")
-set(${PropertyPrefix}ENABLE_FILTER_TAA ${ENABLE_FILTER_TAA} CACHE BOOL "Enable Temporal Anti-Aliasing Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SHADER ${ENABLE_FILTER_SHADER} CACHE BOOL "Enable Shader Filter")
+set(${PropertyPrefix}ENABLE_FILTER_TAA ${ENABLE_FILTER_TAA} CACHE BOOL "Enable Temporal Anti-Aliasing Filter")
 set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM ${ENABLE_FILTER_TRANSFORM} CACHE BOOL "Enable Transform Filter")
 ## Sources
 set(${PropertyPrefix}ENABLE_SOURCE_MIRROR ${ENABLE_SOURCE_MIRROR} CACHE BOOL "Enable Mirror Source")
@@ -820,21 +820,6 @@ if(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS)
 	)
 endif()
 
-## Features - Temporal Anti-Aliasing Filter
-if(${PropertyPrefix}ENABLE_FILTER_TAA)
-	list(APPEND PROJECT_DATA
-		"data/effects/taa/taa-producer.effect"
-		"data/effects/taa/taa-consumer.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-taa.hpp"
-		"source/filters/filter-taa.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_TAA
-	)
-endif()
-
 ## Features - Shader Filter
 if(${PropertyPrefix}ENABLE_FILTER_SHADER)
 	set(REQUIRE_SHADER_CODE ON)
@@ -851,6 +836,20 @@ if(${PropertyPrefix}ENABLE_FILTER_SHADER)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_SHADER
+	)
+endif()
+
+## Features - Temporal Anti-Aliasing Filter
+if(${PropertyPrefix}ENABLE_FILTER_TAA)
+	list(APPEND PROJECT_DATA
+		"data/effects/taa.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-taa.hpp"
+		"source/filters/filter-taa.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_TAA
 	)
 endif()
 

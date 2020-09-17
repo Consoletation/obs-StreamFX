@@ -28,8 +28,7 @@
 
 namespace streamfx::filter::taa {
 	class taa_instance : public obs::source_instance {
-		gs::effect _taa_producer_effect;
-		gs::effect _taa_consumer_effect;
+		gs::effect _taa_effect;
 
 		// Input
 		std::shared_ptr<gs::rendertarget> _source_rt;
@@ -48,11 +47,6 @@ namespace streamfx::filter::taa {
 		std::shared_ptr<gs::texture>      _output_texture;
 		std::shared_ptr<gs::rendertarget> _output_rt;
 
-		// Cache
-		float_t _time;
-		float_t _time_loop;
-		int32_t _loops;
-
 		/// Temporal Anti-Aliasing
 		bool    _taa;
 		vec4    _taa_color;
@@ -60,39 +54,6 @@ namespace streamfx::filter::taa {
 		float_t _taa_range_max;
 		float_t _taa_offset_x;
 		float_t _taa_offset_y;
-		/// Inner Shadow
-		bool    _inner_shadow;
-		vec4    _inner_shadow_color;
-		float_t _inner_shadow_range_min;
-		float_t _inner_shadow_range_max;
-		float_t _inner_shadow_offset_x;
-		float_t _inner_shadow_offset_y;
-		/// Outer Shadow
-		bool    _outer_shadow;
-		vec4    _outer_shadow_color;
-		float_t _outer_shadow_range_min;
-		float_t _outer_shadow_range_max;
-		float_t _outer_shadow_offset_x;
-		float_t _outer_shadow_offset_y;
-		/// Inner Glow
-		bool    _inner_glow;
-		vec4    _inner_glow_color;
-		float_t _inner_glow_width;
-		float_t _inner_glow_sharpness;
-		float_t _inner_glow_sharpness_inv;
-		/// Outer Glow
-		bool    _outer_glow;
-		vec4    _outer_glow_color;
-		float_t _outer_glow_width;
-		float_t _outer_glow_sharpness;
-		float_t _outer_glow_sharpness_inv;
-		/// Outline
-		bool    _outline;
-		vec4    _outline_color;
-		float_t _outline_width;
-		float_t _outline_offset;
-		float_t _outline_sharpness;
-		float_t _outline_sharpness_inv;
 
 		public:
 		taa_instance(obs_data_t* settings, obs_source_t* self);

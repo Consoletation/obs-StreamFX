@@ -28,10 +28,8 @@ using namespace streamfx::filter::shader;
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
-	_fx        = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
-	_rt        = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_rt2       = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_swap_once = 0;
+	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
+	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 shader_instance::~shader_instance() {}
@@ -95,11 +93,6 @@ void shader_instance::video_render(gs_effect_t* effect)
 			gs::debug_marker gdm{gs::debug_color_source, "Cache"};
 #endif
 
-			if (_swap_once < 300) {
-				std::swap(_rt, _rt2);
-				_swap_once++;
-			}
-
 			auto op = _rt->render(_fx->base_width(), _fx->base_height());
 
 			gs_ortho(0, 1, 0, 1, -1, 1);
@@ -131,7 +124,6 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 			_fx->prepare_render();
 			_fx->set_input_a(_rt->get_texture());
-			_fx->set_input_b(_rt2->get_texture());
 			_fx->render();
 		}
 	} catch (const std::exception& ex) {
