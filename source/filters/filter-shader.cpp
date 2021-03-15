@@ -28,8 +28,9 @@ using namespace streamfx::filter::shader;
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
-	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
-	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_fx  = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
+	_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_tex = _rt->get_texture();
 }
 
 shader_instance::~shader_instance() {}
@@ -124,7 +125,9 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 			_fx->prepare_render();
 			_fx->set_input_a(_rt->get_texture());
+			_fx->set_input_b(_tex);
 			_fx->render();
+			_rt->get_texture(_tex);
 		}
 	} catch (const std::exception& ex) {
 		obs_source_skip_video_filter(_self);

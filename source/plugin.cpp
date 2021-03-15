@@ -49,6 +49,9 @@
 #ifdef ENABLE_FILTER_SHADER
 #include "filters/filter-shader.hpp"
 #endif
+#ifdef ENABLE_FILTER_TAA
+#include "filters/filter-taa.hpp"
+#endif
 #ifdef ENABLE_FILTER_TRANSFORM
 #include "filters/filter-transform.hpp"
 #endif
@@ -136,6 +139,9 @@ try {
 #ifdef ENABLE_FILTER_SHADER
 		streamfx::filter::shader::shader_factory::initialize();
 #endif
+#ifdef ENABLE_FILTER_TAA
+		streamfx::filter::taa::taa_factory::initialize();
+#endif
 #ifdef ENABLE_FILTER_TRANSFORM
 		streamfx::filter::transform::transform_factory::initialize();
 #endif
@@ -218,6 +224,9 @@ try {
 #endif
 #ifdef ENABLE_FILTER_SHADER
 		streamfx::filter::shader::shader_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_TAA
+		streamfx::filter::taa::taa_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
 		streamfx::filter::transform::transform_factory::finalize();
